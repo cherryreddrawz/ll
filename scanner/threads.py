@@ -18,7 +18,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
             proxy_addr = next(proxy_iter)
         except StopIteration:
             proxy_addr = None
-            
+
         try:
             sock = create_ssl_socket(
                 ("groups.roblox.com", 443),
@@ -130,7 +130,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         group_info["name"],
                         f"{group_info['memberCount']} members",
                         (f"R$ {group_info['funds']}" if group_info["funds"] is not None else '?') + " funds",
-                        f"https://www.roblox.com/groups/{gid}/--"
+                        f"https://www.roblox.com/groups/{gid}"
                     ]))
 
                     if webhook_url:

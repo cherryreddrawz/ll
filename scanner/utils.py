@@ -37,7 +37,7 @@ def send_webhook(url, ssl_context, **kwargs):
 def make_embed(group_info):
     return dict(
         title="Found claimable group",
-        url=f"https://www.roblox.com/groups/{group_info['id']}/--",
+        url=f"https://www.roblox.com/groups/{group_info['id']}",
         fields=[
             dict(name="Group Id", value=group_info["id"]),
             dict(name="Group Name", value=group_info["name"]),
