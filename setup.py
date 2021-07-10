@@ -11,5 +11,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[],
     install_requires=requirements,
+    options={"py2exe": {"bundle_files": 1, "compressed": True}},
     console=["scanner.py"]
 )
