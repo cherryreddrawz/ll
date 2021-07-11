@@ -29,7 +29,7 @@ def send_webhook(url, **kwargs):
     hostname, path = url.split("://", 1)[1].split("/", 1)
     sock = create_ssl_socket((hostname, 443))
     try:
-        sock.send(f"POST /{path} HTTP/1.1\r\n
+        sock.send(f"POST /{path} HTTP/1.1\r\n"
                   f"Host: {hostname}\r\n"
                   f"Content-Length: {len(payload)}\r\n"
                   f"Content-Type: application/json\r\n"
