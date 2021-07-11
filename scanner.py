@@ -1,5 +1,5 @@
-from scanner.controllers import Controller
-from scanner.arguments import get_arguments
+from lib.controllers import Controller
+from lib.arguments import get_arguments
 import multiprocessing
 
 if __name__ == "__main__":
