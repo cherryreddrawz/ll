@@ -48,6 +48,9 @@ def worker_func(worker_num, worker_barrier, thread_count,
     thread_barrier.wait()
     worker_barrier.wait()
     thread_event.set()
-
-    while any(t.is_alive() for t in threads):
-        count_queue.put((time.time(), check_counter.wait(1)))
+    
+    try:
+        while any(t.is_alive() for t in threads):
+            count_queue.put((time.time(), check_counter.wait(1)))
+    except KeyboardInterrupt:
+        pass
