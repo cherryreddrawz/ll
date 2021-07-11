@@ -1,5 +1,8 @@
 from .utils import create_ssl_socket, shutdown_socket, make_embed, send_webhook
-import json
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 GROUP_IGNORED = 0
 GROUP_TRACKED = 1
