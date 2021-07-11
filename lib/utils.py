@@ -57,7 +57,7 @@ def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, timeout=5):
     sock = None
     
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket()
         sock.settimeout(timeout)
         sock.connect(proxy_addr or addr)
 

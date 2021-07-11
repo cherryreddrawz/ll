@@ -26,6 +26,8 @@ def worker_func(worker_num, worker_barrier, thread_count,
     for num in range(thread_count):
         thread = threading.Thread(
             target=thread_func,
+            name=f"Scanner-{num}",
+            daemon=True,
             kwargs=dict(
                 thread_num=num,
                 worker_num=worker_num,

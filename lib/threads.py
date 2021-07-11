@@ -146,6 +146,10 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
 
                 check_counter.add(len(gid_chunk))
                 gid_chunk = None
+
+            except KeyboardInterrupt:
+                exit()
+            
             except Exception as err:
                 break
             

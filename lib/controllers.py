@@ -35,7 +35,11 @@ class Controller:
                 count_cache = [x for x in count_cache if 60 > t - x[0]]
                 cpm = sum([x[1] for x in count_cache])
                 update_stats(f"CPM: {cpm}")
-        thread = threading.Thread(target=stat_updater_func)
+            
+        thread = threading.Thread(
+            target=stat_updater_func,
+            name="Stat-Thread",
+            daemon=True)
         thread.start()
             
     def start_workers(self):
@@ -43,6 +47,8 @@ class Controller:
         for num in range(self.arguments.workers):
             worker = multiprocessing.Process(
                 target=worker_func,
+                name=f"Worker-{num}",
+                daemon=True,
                 kwargs=dict(
                     worker_num=num,
                     worker_barrier=barrier,
