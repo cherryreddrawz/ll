@@ -40,8 +40,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
             try:
                 # request bulk group info
                 sock.send(f"GET /v2/groups?groupIds={','.join(map(str, gid_chunk))} HTTP/1.1\r\n"
-                          f"Host:groups.roblox.com\r\n"
-                          f"\r\n".encode())
+                           "Host:groups.roblox.com\r\n"
+                           "\r\n".encode())
                 resp = sock.recv(1024 ** 2)
                 expected_length = int(resp.split(b"content-length:", 1)[1].split(b"\r", 1)[0].strip())
                 while expected_length > len(resp.split(b"\r\n\r\n", 1)[1]):
@@ -85,8 +85,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     # group doesn't have an owner, but it did when we last checked
                     # request extra info and determine if it's claimable
                     sock.send(f"GET /v1/groups/{gid} HTTP/1.1\r\n"
-                              f"Host:groups.roblox.com\r\n"
-                              f"\r\n".encode())
+                               "Host:groups.roblox.com\r\n"
+                               "\r\n".encode())
                     resp = sock.recv(1024**2)
 
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
@@ -121,8 +121,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         timeout=timeout)
                     try:
                         funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\r\n"
-                                        f"Host:economy.roblox.com\r\n"
-                                        f"\r\n".encode())
+                                         "Host:economy.roblox.com\r\n"
+                                         "\r\n".encode())
                         resp = funds_sock.recv(1024**2)
                         if not resp.startswith(b"HTTP/1.1 200 OK") and not b'"code":3,' in resp:
                             raise ConnectionAbortedError(

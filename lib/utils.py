@@ -32,8 +32,8 @@ def send_webhook(url, **kwargs):
         sock.send(f"POST /{path} HTTP/1.1\r\n"
                   f"Host: {hostname}\r\n"
                   f"Content-Length: {len(payload)}\r\n"
-                  f"Content-Type: application/json\r\n"
-                  f"\r\n"
+                   "Content-Type: application/json\r\n"
+                   "\r\n"
                   f"{payload}".encode())
         conn.recv(1024 ** 2)
     finally:
