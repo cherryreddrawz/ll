@@ -13,10 +13,9 @@ class ChunkCounter:
         self._count = 0
         self._lock = threading.Lock()
     
-    def __add__(self, delta):
+    def add(self, delta):
         with self._lock:
             self._count += delta
-        return self
         
     def wait(self, interval):
         time.sleep(interval)

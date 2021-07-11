@@ -141,7 +141,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     # ignore group in future requests
                     gid_cache[gid] = GROUP_IGNORED
 
-                check_counter += len(gid_chunk)
+                check_counter.add(len(gid_chunk))
                 gid_chunk = None
             except Exception as err:
                 break
