@@ -5,7 +5,7 @@ Unlike [roblox-group-scanner](https://github.com/h0nde/roblox-group-scanner), th
 
 # Usage
 ```bash
-python scanner.py -w 32 -r 1-11500000 -c 11000000 -p proxies.txt -u WEBHOOKURLHERE
+python scanner.py -w 16 -r 1-11500000 -c 11000000 -p proxies.txt -u WEBHOOKURLHERE
 ```
 
 ```
