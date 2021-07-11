@@ -5,11 +5,7 @@ Unlike [roblox-group-scanner](https://github.com/h0nde/roblox-group-scanner), th
 
 # Usage
 ```bash
-python scanner.py -w 16 -r 1-11500000 -c 11000000 -p proxies.txt -u WEBHOOKURLHERE
-```
-
-```
-usage: scanner.py [-h] [-t THREADS] [-w WORKERS] [-r RANGE] [-c CUT_OFF] [-p PROXY_FILE] [-u WEBHOOK_URL]
+usage: scanner.py [-h] [-t THREADS] [-w WORKERS] -r RANGE [-c CUT_OFF] [-p PROXY_FILE] [-u WEBHOOK_URL]
                   [--chunk-size CHUNK_SIZE] [--timeout TIMEOUT]
 
 optional arguments:
@@ -23,10 +19,10 @@ optional arguments:
   -c CUT_OFF, --cut-off CUT_OFF
                         Group ids past this point won't be blacklisted based on their current validity status
   -p PROXY_FILE, --proxy-file PROXY_FILE
-                        List of HTTP proxies
+                        List of HTTP proxies, separated by newline
   -u WEBHOOK_URL, --webhook-url WEBHOOK_URL
-                        Webhook for results
+                        Found groups will be posted to the specified webhook URL
   --chunk-size CHUNK_SIZE
-                        Amount of groups to be checked per API request
-  --timeout TIMEOUT     Timeout for server responses
+                        Amount of groups to be sent per API request
+  --timeout TIMEOUT     Timeout for server connections and responses
 ```
