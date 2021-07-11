@@ -66,3 +66,7 @@ class Controller:
         for worker in self.workers:
             worker.start()
         barrier.wait()
+
+    def join_workers(self):
+        for worker in self.workers:
+            worker.join()

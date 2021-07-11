@@ -9,3 +9,4 @@ if __name__ == "__main__":
         arguments=arguments
     )
     print("All workers are running!")
+    controller.join_workers()
