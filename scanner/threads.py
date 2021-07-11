@@ -7,7 +7,7 @@ GROUP_TRACKED = 1
 def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 check_counter, ssl_context, proxy_iter,
                 gid_iter, gid_cutoff, gid_cache, gid_chunk_size,
-                webhook_url, response_timeout):
+                webhook_url, timeout):
     gid_chunk = None
 
     thread_barrier.wait()
@@ -24,7 +24,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 ("groups.roblox.com", 443),
                 ssl_context=ssl_context,
                 proxy_addr=proxy_addr,
-                timeout=response_timeout)
+                timeout=timeout)
         except:
             continue
         
@@ -114,7 +114,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         ("economy.roblox.com", 443),
                         ssl_context=ssl_context,
                         proxy_addr=proxy_addr,
-                        timeout=response_timeout)
+                        timeout=timeout)
                     try:
                         funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\r\nHost:economy.roblox.com\r\n\r\n".encode())
                         resp = funds_sock.recv(1024**2)
@@ -136,7 +136,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     if webhook_url:
                         send_webhook(
                             webhook_url,
-                            ssl_context=ssl_context,
                             embeds=[make_embed(group_info)])
 
                     # ignore group in future requests

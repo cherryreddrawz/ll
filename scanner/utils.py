@@ -6,6 +6,7 @@ import socket
 import threading
 import time
 import ctypes
+import ssl
 
 class ChunkCounter:
     def __init__(self):
@@ -24,10 +25,10 @@ class ChunkCounter:
             self._count = 0
             return count
 
-def send_webhook(url, ssl_context, **kwargs):
+def send_webhook(url, **kwargs):
     payload = json.dumps(kwargs, separators=(",", ":"))
     hostname, path = url.split("://", 1)[1].split("/", 1)
-    sock = create_ssl_socket((hostname, 443), ssl_context=ssl_context)
+    sock = create_ssl_socket((hostname, 443))
     try:
         sock.send(f"POST /{path} HTTP/1.1\r\nHost: {hostname}\r\nContent-Length: {len(payload)}\r\nContent-Type: application/json\r\n\r\n{payload}".encode())
         conn.recv(1024 ** 2)
@@ -47,8 +48,10 @@ def make_embed(group_info):
         timestamp=datetime.now(timezone.utc).isoformat()
     )
 
-def create_ssl_socket(addr, ssl_context, proxy_addr=None, timeout=5):
+def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, timeout=5):
+    ssl_context = ssl_context or ssl.create_default_context()
     sock = None
+    
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)

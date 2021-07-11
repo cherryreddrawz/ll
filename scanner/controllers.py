@@ -53,7 +53,7 @@ class Controller:
                     gid_cutoff=self.arguments.cut_off,
                     gid_chunk_size=self.arguments.chunk_size,
                     webhook_url=self.arguments.webhook_url,
-                    response_timeout=self.arguments.timeout
+                    timeout=self.arguments.timeout
                 )
             )
             self.workers.append(worker)
