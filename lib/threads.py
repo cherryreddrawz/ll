@@ -49,7 +49,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 if not resp.startswith(b"HTTP/1.1 200 OK"):
                     raise ConnectionAbortedError(
                         f"Unexpected response while requesting group details: {resp[:64]}")
-
                 # group id -> group info dict
                 data_assoc = {x["id"]: x for x in json.loads(resp.split(b"\r\n\r\n", 1)[1])["data"]}
                 
@@ -88,11 +87,9 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                                "Host:groups.roblox.com\r\n"
                                "\r\n".encode())
                     resp = sock.recv(1024**2)
-
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
                         raise ConnectionAbortedError(
                             f"Unexpected response while requesting extra group details: {resp[:64]}")
-
                     group_info = json.loads(resp.split(b"\r\n\r\n", 1)[1])
 
                     if group_info["owner"]:
