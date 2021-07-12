@@ -113,8 +113,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         gid_cache[gid] = GROUP_IGNORED
                         continue
 
-                    print(group_info)
-
                     # get amount of funds in group
                     funds_sock = create_ssl_socket(
                         ("economy.roblox.com", 443),
