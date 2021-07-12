@@ -62,10 +62,11 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     if group_status == GROUP_IGNORED:
                         continue
                     
-                    if not group_info and (not gid_cutoff or gid_cutoff > gid):
+                    if not group_info:
                         # info for group wasn't included in response
-                        # assume it's deleted and ignore it in future requests
-                        gid_cache[gid] = GROUP_IGNORED
+                        if not gid_cutoff or gid_cutoff > gid:
+                            # assume it's deleted and ignore it in future requests
+                            gid_cache[gid] = GROUP_IGNORED
                         continue
                     
                     if not group_status:
@@ -101,7 +102,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         gid_cache[gid] = GROUP_IGNORED
                         continue
 
-                    if group_info.get("isLocked"):
+                    if "isLocked" in group_info:
                         # group is locked
                         # ignore it in future requests
                         gid_cache[gid] = GROUP_IGNORED
@@ -122,12 +123,14 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     try:
                         funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\n"
                                          "Host:economy.roblox.com\n"
-                                         "\r\n".encode())
+                                         "\n".encode())
                         resp = funds_sock.recv(1024**2)
-                        if not resp.startswith(b"HTTP/1.1 200 OK") and not b'"code":3,' in resp:
+                        if resp.startswith(b"HTTP/1.1 200 OK"):
+                            group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
+                        elif not b'"code":3,' in resp:
                             raise ConnectionAbortedError(
                                 f"Unexpected response while requesting group fund details: {resp[:64]}")
-                        group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1]).get("robux")
+                        
                     finally:
                         shutdown_socket(funds_sock)
 
@@ -135,14 +138,15 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     print(" ~ ".join([
                         group_info["name"],
                         f"{group_info['memberCount']} members",
-                        (f"R$ {group_info['funds']}" if group_info["funds"] is not None else '?') + " funds",
+                        (f"R$ {group_info['funds']}" if group_info.get("funds") is not None else '?') + " funds",
                         f"https://www.roblox.com/groups/{gid}"
                     ]))
 
                     if webhook_url:
                         send_webhook(
                             webhook_url,
-                            embeds=[make_embed(group_info)])
+                            embeds=[make_embed(group_info)]
+                        )
 
                     # ignore group in future requests
                     gid_cache[gid] = GROUP_IGNORED
