@@ -130,9 +130,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                             raise ConnectionAbortedError(
                                 f"Unexpected response while requesting group fund details: {resp[:64]}")
                         group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1]).get("robux")
-                    except Exception as err:
-                        print("fund thing", err)
-                        raise
                     finally:
                         shutdown_socket(funds_sock)
 
@@ -159,7 +156,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 exit()
             
             except Exception as err:
-                print(f"{err!r}")
                 break
             
         shutdown_socket(sock)
