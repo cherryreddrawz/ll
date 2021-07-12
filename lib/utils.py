@@ -49,9 +49,8 @@ def make_embed(group_info):
             dict(name="Group Members", value=group_info["memberCount"]),
             dict(name="Group Funds", value=f"R$ {group_info['funds']}" if group_info.get("funds") is not None else "?")
         ],
-        author=dict(
-            name="h0nda's group scanner v2",
-            url="https://github.com/h0nde/roblox-group-scanner-v2"
+        footer=dict(
+            text="https://github.com/h0nde/roblox-group-scanner-v2"
         ),
         timestamp=datetime.now(timezone.utc).isoformat()
     )
