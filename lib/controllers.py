@@ -58,6 +58,7 @@ class Controller:
                     gid_range=slice_range(self.arguments.range, num, self.arguments.workers),
                     gid_cutoff=self.arguments.cut_off,
                     gid_chunk_size=self.arguments.chunk_size,
+                    get_funds=self.arguments.get_funds,
                     webhook_url=self.arguments.webhook_url,
                     timeout=self.arguments.timeout
                 )

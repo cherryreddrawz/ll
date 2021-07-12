@@ -9,7 +9,7 @@ GROUP_TRACKED = 1
 
 def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 check_counter, ssl_context, proxy_iter,
-                gid_iter, gid_cutoff, gid_cache, gid_chunk_size,
+                gid_iter, gid_cutoff, gid_cache, gid_chunk_size, get_funds,
                 webhook_url, timeout):
     gid_chunk = None
 
@@ -105,23 +105,24 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         continue
 
                     # get amount of funds in group
-                    funds_sock = create_ssl_socket(
-                        ("economy.roblox.com", 443),
-                        ssl_context=ssl_context,
-                        proxy_addr=proxy_addr,
-                        timeout=timeout)
-                    try:
-                        funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\n"
-                                         "Host:economy.roblox.com\n"
-                                         "\n".encode())
-                        resp = funds_sock.recv(1024**2)
-                        if resp.startswith(b"HTTP/1.1 200 OK"):
-                            group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
-                        elif not b'"code":3,' in resp:
-                            raise ConnectionAbortedError(
-                                f"Unexpected response while requesting group fund details: {resp[:64]}")
-                    finally:
-                        shutdown_socket(funds_sock)
+                    if get_funds:
+                        funds_sock = create_ssl_socket(
+                            ("economy.roblox.com", 443),
+                            ssl_context=ssl_context,
+                            proxy_addr=proxy_addr,
+                            timeout=timeout)
+                        try:
+                            funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\n"
+                                            "Host:economy.roblox.com\n"
+                                            "\n".encode())
+                            resp = funds_sock.recv(1024**2)
+                            if resp.startswith(b"HTTP/1.1 200 OK"):
+                                group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
+                            elif not b'"code":3,' in resp:
+                                raise ConnectionAbortedError(
+                                    f"Unexpected response while requesting group fund details: {resp[:64]}")
+                        finally:
+                            shutdown_socket(funds_sock)
 
                     # log group as claimable
                     print(" ~ ".join([

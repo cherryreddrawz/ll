@@ -23,6 +23,8 @@ def get_arguments():
     parser.add_argument("-p", "--proxy-file", type=argparse.FileType("r", encoding="UTF-8", errors="ignore"), help="list of HTTP proxies, separated by newline")
     parser.add_argument("-u", "--webhook-url", type=str, help="found groups will be posted to this url")
     parser.add_argument("--chunk-size", type=int, default=100, help="amount of groups to be sent per API request")
+    parser.add_argument("--get-funds", type=int, default=1, help="attempt to obtain amount of funds in a group")
     parser.add_argument("--timeout", type=float, default=5.0, help="timeout for server connections and responses")
     arguments = parser.parse_args()
+    print(arguments.get_funds)
     return arguments
