@@ -150,7 +150,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 exit()
             
             except Exception as err:
-                print(f"{err!r}")
                 break
             
         shutdown_socket(sock)
