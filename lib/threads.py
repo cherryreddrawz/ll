@@ -128,10 +128,10 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
 
                     # log group as claimable
                     print(" ~ ".join([
-                        group_info["name"],
+                        f"https://www.roblox.com/groups/{gid}",
                         f"{group_info['memberCount']} members",
                         (f"R$ {group_info['funds']}" if group_info.get("funds") is not None else '?') + " funds",
-                        f"https://www.roblox.com/groups/{gid}"
+                        group_info["name"]
                     ]))
 
                     if webhook_url:
