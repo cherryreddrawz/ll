@@ -1,8 +1,9 @@
 from .utils import create_ssl_socket, shutdown_socket, make_embed, send_webhook
+from zlib import decompress
 try:
-    import orjson as json
+    from orjson import loads as json_loads
 except ImportError:
-    import json
+    from json import loads as json_loads
 
 GROUP_IGNORED = 0
 GROUP_TRACKED = 1
@@ -44,6 +45,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 # request bulk group info
                 sock.send(f"GET /v2/groups?groupIds={','.join(map(str, gid_chunk))} HTTP/1.1\n"
                            "Host:groups.roblox.com\n"
+                           "Accept-Encoding:deflate\n"
                            "\n".encode())
                 resp = sock.recv(1024 ** 2)
                 if not resp.startswith(b"HTTP/1.1 200 OK"):
@@ -53,7 +55,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 resp = resp.split(b"\r\n\r\n", 1)[1]
                 while expected_length > len(resp):
                     resp += sock.recv(1024 ** 2)
-                resp = {x["id"]: x for x in json.loads(resp)["data"]}
+                resp = {x["id"]: x for x in json_loads(decompress(resp, -15))["data"]}
 
                 for gid in gid_chunk:
                     group_status = gid_cache.get(gid)
