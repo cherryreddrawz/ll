@@ -75,13 +75,12 @@ def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, timeout=5):
         raise
 
 def shutdown_socket(sock):
-    if not sock:
-        return
-    try:
-        sock.shutdown(socket.SHUT_RDWR)
-    except OSError:
-        pass
-    sock.close()
+    if sock:
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        sock.close()
 
 def slice_list(lst, num, total):
     per = int(len(lst)/total)

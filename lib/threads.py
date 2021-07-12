@@ -42,22 +42,22 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
 
             try:
                 # request bulk group info
-                sock.send(f"GET /v2/groups?groupIds={','.join(map(str, gid_chunk))} HTTP/1.1\r\n"
-                           "Host:groups.roblox.com\r\n"
-                           "\r\n".encode())
+                sock.send(f"GET /v2/groups?groupIds={','.join(map(str, gid_chunk))} HTTP/1.1\n"
+                           "Host:groups.roblox.com\n"
+                           "\n".encode())
                 resp = sock.recv(1024 ** 2)
-                expected_length = int(resp.split(b"content-length:", 1)[1].split(b"\r", 1)[0].strip())
-                while expected_length > len(resp.split(b"\r\n\r\n", 1)[1]):
-                    resp += sock.recv(1024 ** 2)
                 if not resp.startswith(b"HTTP/1.1 200 OK"):
                     raise ConnectionAbortedError(
                         f"Unexpected response while requesting group details: {resp[:64]}")
-                # group id -> group info dict
-                data_assoc = {x["id"]: x for x in json.loads(resp.split(b"\r\n\r\n", 1)[1])["data"]}
+                expected_length = int(resp.split(b"content-length:", 1)[1].split(b"\r", 1)[0].strip())
+                resp = resp.split(b"\r\n\r\n", 1)[1]
+                while expected_length > len(resp):
+                    resp += sock.recv(1024 ** 2)
+                resp = {x["id"]: x for x in json.loads(resp)["data"]}
                 
                 for gid in gid_chunk:
                     group_status = gid_cache.get(gid)
-                    group_info = data_assoc.get(gid)
+                    group_info = resp.get(gid)
 
                     if group_status == GROUP_IGNORED:
                         continue
@@ -86,9 +86,9 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     
                     # group doesn't have an owner, but it did when we last checked
                     # request extra info and determine if it's claimable
-                    sock.send(f"GET /v1/groups/{gid} HTTP/1.1\r\n"
-                               "Host:groups.roblox.com\r\n"
-                               "\r\n".encode())
+                    sock.send(f"GET /v1/groups/{gid} HTTP/1.1\n"
+                               "Host:groups.roblox.com\n"
+                               "\n".encode())
                     resp = sock.recv(1024**2)
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
                         raise ConnectionAbortedError(
@@ -113,6 +113,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         gid_cache[gid] = GROUP_IGNORED
                         continue
 
+                    print(group_info)
+
                     # get amount of funds in group
                     funds_sock = create_ssl_socket(
                         ("economy.roblox.com", 443),
@@ -120,14 +122,17 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         proxy_addr=proxy_addr,
                         timeout=timeout)
                     try:
-                        funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\r\n"
-                                         "Host:economy.roblox.com\r\n"
+                        funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\n"
+                                         "Host:economy.roblox.com\n"
                                          "\r\n".encode())
                         resp = funds_sock.recv(1024**2)
                         if not resp.startswith(b"HTTP/1.1 200 OK") and not b'"code":3,' in resp:
                             raise ConnectionAbortedError(
                                 f"Unexpected response while requesting group fund details: {resp[:64]}")
                         group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1]).get("robux")
+                    except Exception as err:
+                        print("fund thing", err)
+                        raise
                     finally:
                         shutdown_socket(funds_sock)
 
@@ -154,6 +159,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 exit()
             
             except Exception as err:
+                print(f"{err!r}")
                 break
             
         shutdown_socket(sock)
