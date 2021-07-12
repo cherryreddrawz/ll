@@ -1,12 +1,13 @@
-from .windows import set_cpu_affinity
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
+from os import name as os_name
 import json
 import socket
 import threading
 import time
-import ctypes
 import ssl
+if os_name == "nt":
+    SetConsoleTitleW = __import__("ctypes").windll.kernel32.SetConsoleTitleW
 
 class ChunkCounter:
     def __init__(self):
@@ -98,4 +99,14 @@ def slice_range(r, num, total):
     )
 
 def update_stats(text):
-    ctypes.windll.kernel32.SetConsoleTitleW(text)
+    if os_name == "nt":
+        SetConsoleTitleW(text)
+    else:
+        print(text)
+
+def set_cpu_affinity(cpu_num):
+    if os_name == "nt":
+        from .windows import set_cpu_affinity
+        return set_cpu_affinity(0, 1 << cpu_num)
+    else:
+        os.sched_setaffinity(0, [cpu_num])

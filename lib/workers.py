@@ -11,7 +11,7 @@ def worker_func(worker_num, worker_barrier, thread_count,
                 proxy_list,
                 gid_range,
                 **thread_kwargs):
-    set_cpu_affinity(mask=1 << (worker_num % cpu_count()))
+    set_cpu_affinity(worker_num % cpu_count())
     
     check_counter = ChunkCounter()
     proxy_iter = itertools.cycle(proxy_list)
