@@ -54,7 +54,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 while expected_length > len(resp):
                     resp += sock.recv(1024 ** 2)
                 resp = {x["id"]: x for x in json.loads(resp)["data"]}
-                
+
                 for gid in gid_chunk:
                     group_status = gid_cache.get(gid)
                     group_info = resp.get(gid)
@@ -96,21 +96,11 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                             f"Unexpected response while requesting extra group details: {resp[:64]}")
                     group_info = json.loads(resp.split(b"\r\n\r\n", 1)[1])
 
-                    if group_info["owner"]:
-                        # groups shouldn't switch owners in such a short amount of time
-                        # assume group is bugged and ignore it in future reequests
-                        gid_cache[gid] = GROUP_IGNORED
-                        continue
-
-                    if "isLocked" in group_info:
-                        # group is locked
-                        # ignore it in future requests
-                        gid_cache[gid] = GROUP_IGNORED
-                        continue
-                    
-                    if not group_info["publicEntryAllowed"]:
-                        # group requires manual approval for each join request
-                        # ignore it in future requests
+                    if not group_info["publicEntryAllowed"] \
+                        or group_info["owner"] \
+                        or "isLocked" in group_info:
+                        # group is unclaimable
+                        # ignore group in future requests
                         gid_cache[gid] = GROUP_IGNORED
                         continue
 
@@ -130,7 +120,6 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         elif not b'"code":3,' in resp:
                             raise ConnectionAbortedError(
                                 f"Unexpected response while requesting group fund details: {resp[:64]}")
-                        
                     finally:
                         shutdown_socket(funds_sock)
 
