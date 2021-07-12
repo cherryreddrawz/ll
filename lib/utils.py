@@ -93,7 +93,10 @@ def slice_list(lst, num, total):
 
 def slice_range(r, num, total):
     per = int((r[1]-r[0]+1)/total)
-    return (r[0] + num * per, (num + 1) * per)
+    return (
+        r[0] + (num * per),
+        r[0] + ((num + 1) * per)
+    )
 
 def update_stats(text):
     ctypes.windll.kernel32.SetConsoleTitleW(text)

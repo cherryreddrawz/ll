@@ -26,5 +26,4 @@ def get_arguments():
     parser.add_argument("--get-funds", type=int, default=1, help="attempt to obtain amount of funds in a group")
     parser.add_argument("--timeout", type=float, default=5.0, help="timeout for server connections and responses")
     arguments = parser.parse_args()
-    print(arguments.get_funds)
     return arguments
