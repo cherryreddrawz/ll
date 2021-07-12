@@ -35,7 +35,7 @@ def send_webhook(url, **kwargs):
                    "Content-Type: application/json\r\n"
                    "\r\n"
                   f"{payload}".encode())
-        conn.recv(1024 ** 2)
+        sock.recv(1024 ** 2)
     finally:
         shutdown_socket(sock)
 
