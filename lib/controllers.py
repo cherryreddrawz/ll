@@ -23,8 +23,11 @@ class Controller:
                 line = self.arguments.proxy_file.readline()
                 if not line:
                     break
-                host, _, port = line.partition(":")
-                self.proxies.append((host, int(port)))
+                try:
+                    host, _, port = line.partition(":")
+                    self.proxies.append((host, int(port)))
+                except Exception as err:
+                    print(f"Error while loading proxy '{line}': {err!r}")
 
     def start_stat_thread(self):
         def stat_updater_func():
