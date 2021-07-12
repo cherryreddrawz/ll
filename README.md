@@ -9,7 +9,6 @@ python scanner.py -w 16 -r 1-11500000 -c 11000000 -p proxies.txt -u WEBHOOKURL
 ```
 
 ```
-  -h, --help            show this help message and exit
   -t THREADS, --threads THREADS
                         amount of threads per worker
   -w WORKERS, --workers WORKERS
@@ -24,5 +23,7 @@ python scanner.py -w 16 -r 1-11500000 -c 11000000 -p proxies.txt -u WEBHOOKURL
                         found groups will be posted to this url
   --chunk-size CHUNK_SIZE
                         amount of groups to be sent per API request
+  --get-funds GET_FUNDS
+                        attempt to obtain amount of funds in a group
   --timeout TIMEOUT     timeout for server connections and responses
 ```
