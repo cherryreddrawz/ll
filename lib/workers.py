@@ -1,5 +1,5 @@
 from .threads import thread_func
-from .utils import ChunkCounter, set_cpu_affinity
+from .utils import ChunkCounter, set_cpu_affinity, slice_range
 from multiprocessing import cpu_count
 import threading
 import itertools
@@ -16,8 +16,6 @@ def worker_func(worker_num, worker_barrier, thread_count,
     check_counter = ChunkCounter()
     proxy_iter = itertools.cycle(proxy_list)
     ssl_context = ssl.create_default_context()
-    gid_iter = itertools.cycle(range(*gid_range))
-    gid_cache = {}
 
     thread_barrier = threading.Barrier(thread_count + 1)
     thread_event = threading.Event()
@@ -36,8 +34,7 @@ def worker_func(worker_num, worker_barrier, thread_count,
                 check_counter=check_counter,
                 ssl_context=ssl_context,
                 proxy_iter=proxy_iter,
-                gid_iter=gid_iter,
-                gid_cache=gid_cache,
+                gid_range=slice_range(gid_range, num, thread_count),
                 **thread_kwargs
             )
         )
