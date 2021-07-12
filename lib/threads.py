@@ -96,7 +96,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
                         raise ConnectionAbortedError(
                             f"Unexpected response while requesting extra group details: {resp[:64]}")
-                    group_info = json.loads(resp.split(b"\r\n\r\n", 1)[1])
+                    group_info = json_loads(resp.split(b"\r\n\r\n", 1)[1])
 
                     if not group_info["publicEntryAllowed"] \
                         or group_info["owner"] \
@@ -119,7 +119,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                                             "\n".encode())
                             resp = funds_sock.recv(1024**2)
                             if resp.startswith(b"HTTP/1.1 200 OK"):
-                                group_info["funds"] = json.loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
+                                group_info["funds"] = json_loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
                             elif not b'"code":3,' in resp:
                                 raise ConnectionAbortedError(
                                     f"Unexpected response while requesting group fund details: {resp[:64]}")
@@ -150,6 +150,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 exit()
             
             except Exception as err:
+                print(f"{err!r}")
                 break
             
         shutdown_socket(sock)
