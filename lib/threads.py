@@ -46,9 +46,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 gid_chunk = []
                 while gid_chunk_size > len(gid_chunk):
                     gid = next(gid_iter)
-                    if gid_cache.get(gid) == GROUP_IGNORED:
-                        continue
-                    gid_chunk.append(gid)
+                    if gid_cache.get(gid) != GROUP_IGNORED:
+                        gid_chunk.append(gid)
 
             try:
                 # request bulk group info
@@ -58,10 +57,8 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                            "\n".encode())
                 resp = sock.recv(1024 ** 2)
                 if not resp.startswith(b"HTTP/1.1 200 OK"):
-                    raise ConnectionAbortedError(
-                        f"Unexpected response while requesting group details: {resp[:64]}")
+                    raise ConnectionAbortedError
                 resp = resp.split(b"\r\n\r\n", 1)[1]
-                # deflate encoded responses always end in null byte
                 while resp[-1] != 0:
                     resp += sock.recv(1024 ** 2)
                 group_assoc = {
@@ -108,8 +105,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                                "\n".encode())
                     resp = sock.recv(1024**2)
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
-                        raise ConnectionAbortedError(
-                            f"Unexpected response while requesting extra group details: {resp[:64]}")
+                        raise ConnectionAbortedError
                     group_info = json_loads(resp.split(b"\r\n\r\n", 1)[1])
 
                     if not group_info["publicEntryAllowed"] \
@@ -136,8 +132,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                             if resp.startswith(b"HTTP/1.1 200 OK"):
                                 group_info["funds"] = json_loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
                             elif not b'"code":3,' in resp:
-                                raise ConnectionAbortedError(
-                                    f"Unexpected response while requesting group fund details: {resp[:64]}")
+                                raise ConnectionAbortedError
                         finally:
                             shutdown_socket(funds_sock)
 
