@@ -57,7 +57,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                            "\n".encode())
                 resp = sock.recv(1024 ** 2)
                 if not resp.startswith(b"HTTP/1.1 200 OK"):
-                    raise ConnectionAbortedError
+                    break
                 resp = resp.split(b"\r\n\r\n", 1)[1]
                 while resp[-1] != 0:
                     resp += sock.recv(1024 ** 2)
@@ -105,7 +105,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                                "\n".encode())
                     resp = sock.recv(1024**2)
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
-                        raise ConnectionAbortedError
+                        break
                     group_info = json_loads(resp.split(b"\r\n\r\n", 1)[1])
 
                     if not group_info["publicEntryAllowed"] \
@@ -132,7 +132,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                             if resp.startswith(b"HTTP/1.1 200 OK"):
                                 group_info["funds"] = json_loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
                             elif not b'"code":3,' in resp:
-                                raise ConnectionAbortedError
+                                break
                         finally:
                             shutdown_socket(funds_sock)
 
