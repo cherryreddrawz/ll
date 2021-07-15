@@ -58,7 +58,10 @@ class Controller:
                     thread_count=self.arguments.threads,
                     count_queue=self.count_queue,
                     proxy_list=slice_list(self.proxies, num, self.arguments.workers),
-                    gid_range=slice_range(self.arguments.range, num, self.arguments.workers),
+                    gid_ranges=[
+                        slice_range(gid_range, num, self.arguments.workers)
+                        for gid_range in self.arguments.range
+                    ],
                     gid_cutoff=self.arguments.cut_off,
                     gid_chunk_size=self.arguments.chunk_size,
                     get_funds=self.arguments.get_funds,

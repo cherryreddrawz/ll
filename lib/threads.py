@@ -1,30 +1,44 @@
 from .utils import create_ssl_socket, shutdown_socket, make_embed, send_webhook
 from zlib import decompress
-from itertools import cycle
 try:
     from orjson import loads as json_loads
 except ImportError:
     from json import loads as json_loads
+import re
 
-GROUP_IGNORED = 0
-GROUP_TRACKED = 1
+BATCH_GROUP_PATTERN = re.compile(b'{"id":(\d+),.{25}.+?,"owner":(.)')
+BATCH_GROUP_REQUEST = (
+    b"GET /v2/groups?groupIds=%b HTTP/1.1\n"
+    b"Host:groups.roblox.com\n"
+    b"Accept-Encoding:deflate\n"
+    b"\n")
+SINGLE_GROUP_REQUEST = (
+    b"GET /v1/groups/%b HTTP/1.1\n"
+    b"Host:groups.roblox.com\n"
+    b"\n")
+FUNDS_REQUEST = (
+    b"GET /v1/groups/%b/currency HTTP/1.1\n"
+    b"Host:economy.roblox.com\n"
+    b"\n")
 
 def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                 check_counter, ssl_context, proxy_iter,
-                gid_range, gid_cutoff, gid_chunk_size,
+                gid_ranges, gid_cutoff, gid_chunk_size,
                 get_funds, webhook_url, timeout):
-    gid_iter = cycle(range(*gid_range))
-    gid_count = gid_range[1] - gid_range[0]
-    gid_cache = {}
-    gid_chunk = None
+    gid_list = []
+    for gid_range in gid_ranges:
+        gid_list += list(map(lambda x: str(x).encode(), range(*gid_range)))
+    gid_list_len = len(gid_list)
+    gid_list_idx = 0
+    gid_tracked = set()
 
     thread_barrier.wait()
     thread_event.wait()
 
     while True:
-        try:
+        if proxy_iter:
             proxy_addr = next(proxy_iter)
-        except StopIteration:
+        else:
             proxy_addr = None
 
         try:
@@ -37,84 +51,69 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
             continue
         
         while True:
-            if not gid_chunk:
-                if gid_chunk_size > gid_count:
-                    # no more un-ignored groups left to scan
-                    # kill thread
-                    return
-                
-                gid_chunk = []
-                while gid_chunk_size > len(gid_chunk):
-                    gid = next(gid_iter)
-                    if gid_cache.get(gid) != GROUP_IGNORED:
-                        gid_chunk.append(gid)
+            if gid_chunk_size > len(gid_list):
+                return
+
+            gid_chunk = [
+                gid_list[(gid_list_idx:=gid_list_idx+1) % gid_list_len]
+                for _ in range(gid_chunk_size)
+            ]
 
             try:
                 # request bulk group info
-                sock.send(f"GET /v2/groups?groupIds={','.join(map(str, gid_chunk))} HTTP/1.1\n"
-                           "Host:groups.roblox.com\n"
-                           "Accept-Encoding:deflate\n"
-                           "\n".encode())
+                sock.send(BATCH_GROUP_REQUEST % b",".join(gid_chunk))
                 resp = sock.recv(1024 ** 2)
-                if not resp.startswith(b"HTTP/1.1 200 OK"):
+                if resp[:15] != b"HTTP/1.1 200 OK":
                     break
-                resp = resp.split(b"\r\n\r\n", 1)[1]
+                resp = resp.partition(b"\r\n\r\n")[2]
                 while resp[-1] != 0:
                     resp += sock.recv(1024 ** 2)
-                group_assoc = {
-                    x["id"]: x
-                    for x in json_loads(decompress(resp, -15)[8:-1])
+                owner_status = {
+                    m[0]: m[1] == b"{"
+                    for m in BATCH_GROUP_PATTERN.findall(decompress(resp, -15))
                 }
 
                 for gid in gid_chunk:
-                    group_status = gid_cache.get(gid)
-                    group_info = group_assoc.get(gid)
-
-                    if group_status == GROUP_IGNORED:
-                        continue
-                    
-                    if not group_info:
+                    if not gid in owner_status:
                         # info for group wasn't included in response
-                        if not gid_cutoff or gid_cutoff > gid:
+                        if not gid_cutoff or gid_cutoff > int(gid):
                             # assume it's deleted and ignore it in future requests
-                            gid_cache[gid] = GROUP_IGNORED
-                            gid_count -= 1
+                            gid_list.remove(gid)
+                            gid_list_len -= 1
                         continue
                     
-                    if not group_status:
-                        if group_info["owner"]:
+                    if not gid in gid_tracked:
+                        if owner_status[gid]:
                             # group has an owner and this is our first time checking it
                             # add it as a tracked group
-                            gid_cache[gid] = GROUP_TRACKED
+                            gid_tracked.add(gid)
                         else:
                             # group doesn't have an owner and this is only our first time checking it
                             # assume it's manual-approval/locked and ignore it in future requests
-                            gid_cache[gid] = GROUP_IGNORED
-                            gid_count -= 1
+                            gid_list.remove(gid)
+                            gid_list_len -= 1
                         continue
 
-                    if group_info["owner"]:
+                    if owner_status[gid]:
                         # group has an owner and this is *not* our first time checking it
                         # skip to next group
                         continue
-                    
-                    # group doesn't have an owner, but it did when we last checked
+
+                    # group is tracked and doesn't have an owner
                     # request extra info and determine if it's claimable
-                    sock.send(f"GET /v1/groups/{gid} HTTP/1.1\n"
-                               "Host:groups.roblox.com\n"
-                               "\n".encode())
-                    resp = sock.recv(1024**2)
+                    sock.send(SINGLE_GROUP_REQUEST % gid)
+                    resp = sock.recv(1024 ** 2)
                     if not resp.startswith(b"HTTP/1.1 200 OK"):
                         break
-                    group_info = json_loads(resp.split(b"\r\n\r\n", 1)[1])
+                    group_info = json_loads(resp.partition(b"\r\n\r\n")[2])
 
                     if not group_info["publicEntryAllowed"] \
                         or group_info["owner"] \
                         or "isLocked" in group_info:
                         # group is unclaimable
                         # ignore group in future requests
-                        gid_cache[gid] = GROUP_IGNORED
-                        gid_count -= 1
+                        gid_list.remove(gid)
+                        gid_list_len -= 1
                         continue
 
                     # get amount of funds in group
@@ -125,12 +124,10 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                             proxy_addr=proxy_addr,
                             timeout=timeout)
                         try:
-                            funds_sock.send(f"GET /v1/groups/{group_info['id']}/currency HTTP/1.1\n"
-                                            "Host:economy.roblox.com\n"
-                                            "\n".encode())
-                            resp = funds_sock.recv(1024**2)
+                            funds_sock.send(FUNDS_REQUEST % gid)
+                            resp = funds_sock.recv(1024 ** 2)
                             if resp.startswith(b"HTTP/1.1 200 OK"):
-                                group_info["funds"] = json_loads(resp.split(b"\r\n\r\n", 1)[1])["robux"]
+                                group_info["funds"] = json_loads(resp)["robux"]
                             elif not b'"code":3,' in resp:
                                 break
                         finally:
@@ -138,7 +135,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
 
                     # log group as claimable
                     print(" ~ ".join([
-                        f"https://www.roblox.com/groups/{gid}",
+                        f"https://www.roblox.com/groups/{gid.decode()}",
                         f"{group_info['memberCount']} members",
                         (f"R$ {group_info['funds']}" if group_info.get("funds") is not None else '?') + " funds",
                         group_info["name"]
@@ -151,11 +148,10 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
                         )
 
                     # ignore group in future requests
-                    gid_cache[gid] = GROUP_IGNORED
-                    gid_count -= 1
+                    gid_list.remove(gid)
+                    gid_list_len -= 1
 
-                check_counter.add(len(gid_chunk))
-                gid_chunk = None
+                check_counter.add(gid_chunk_size)
 
             except KeyboardInterrupt:
                 exit()

@@ -9,12 +9,12 @@ import time
 def worker_func(worker_num, worker_barrier, thread_count,
                 count_queue,
                 proxy_list,
-                gid_range,
+                gid_ranges,
                 **thread_kwargs):
     set_cpu_affinity(worker_num % cpu_count())
     
     check_counter = ChunkCounter()
-    proxy_iter = itertools.cycle(proxy_list)
+    proxy_iter = itertools.cycle(proxy_list) if proxy_list else None
     ssl_context = ssl.create_default_context()
 
     thread_barrier = threading.Barrier(thread_count + 1)
@@ -34,7 +34,10 @@ def worker_func(worker_num, worker_barrier, thread_count,
                 check_counter=check_counter,
                 ssl_context=ssl_context,
                 proxy_iter=proxy_iter,
-                gid_range=slice_range(gid_range, num, thread_count),
+                gid_ranges=[
+                    slice_range(gid_range, num, thread_count)
+                    for gid_range in gid_ranges
+                ],
                 **thread_kwargs
             )
         )
