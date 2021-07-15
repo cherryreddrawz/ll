@@ -36,10 +36,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
     thread_event.wait()
 
     while True:
-        if proxy_iter:
-            proxy_addr = next(proxy_iter)
-        else:
-            proxy_addr = None
+        proxy_addr = next(proxy_iter) if proxy_iter None
 
         try:
             sock = create_ssl_socket(
