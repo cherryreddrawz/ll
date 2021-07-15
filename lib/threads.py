@@ -57,7 +57,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
             ]
 
             try:
-                # request bulk group info
+                # request batch group info
                 sock.send(BATCH_GROUP_REQUEST % b",".join(gid_chunk))
                 resp = sock.recv(1024 ** 2)
                 if resp[:15] != b"HTTP/1.1 200 OK":
