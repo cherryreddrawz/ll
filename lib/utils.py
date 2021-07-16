@@ -28,14 +28,19 @@ class ChunkCounter:
 def send_webhook(url, **kwargs):
     payload = json.dumps(kwargs, separators=(",", ":"))
     hostname, path = url.split("://", 1)[1].split("/", 1)
-    sock = create_ssl_socket((hostname, 443 if "https" in url else 80), ssl_wrap="https" in url)
+    if ":" in hostname:
+        hostname, port = hostname.split(":", 1)
+        port = int(port)
+    else:
+        port = 443 if "https" in url else 80
+    sock = create_ssl_socket((hostname, port), ssl_wrap="https" in url)
     try:
         sock.send(f"POST /{path} HTTP/1.1\r\n"
-                  f"Host: {hostname}\r\n"
-                  f"Content-Length: {len(payload)}\r\n"
-                   "Content-Type: application/json\r\n"
-                   "\r\n"
-                  f"{payload}".encode())
+                f"Host: {hostname}\r\n"
+                f"Content-Length: {len(payload)}\r\n"
+                "Content-Type: application/json\r\n"
+                "\r\n"
+                f"{payload}".encode())
         sock.recv(1024 ** 2)
     finally:
         shutdown_socket(sock)
