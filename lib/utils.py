@@ -28,7 +28,7 @@ class ChunkCounter:
 def send_webhook(url, **kwargs):
     payload = json.dumps(kwargs, separators=(",", ":"))
     hostname, path = url.split("://", 1)[1].split("/", 1)
-    sock = create_ssl_socket((hostname, 443))
+    sock = create_ssl_socket((hostname, 443 if "https" in url else 80), ssl_wrap="https" in url)
     try:
         sock.send(f"POST /{path} HTTP/1.1\r\n"
                   f"Host: {hostname}\r\n"
@@ -56,8 +56,9 @@ def make_embed(group_info):
         timestamp=datetime.now(timezone.utc).isoformat()
     )
 
-def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, timeout=5):
-    ssl_context = ssl_context or ssl.create_default_context()
+def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, ssl_wrap=True, timeout=5):
+    if ssl_wrap:
+        ssl_context = ssl_context or ssl.create_default_context()
     sock = None
     
     try:
@@ -71,7 +72,8 @@ def create_ssl_socket(addr, ssl_context=None, proxy_addr=None, timeout=5):
                 raise ConnectionRefusedError(
                     "Proxy server did not return a correct response for tunnel request")
 
-        sock = ssl_context.wrap_socket(sock, server_hostname=addr[0])
+        if ssl_wrap:
+            sock = ssl_context.wrap_socket(sock, server_hostname=addr[0])
         return sock
     
     except:
