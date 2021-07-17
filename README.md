@@ -5,7 +5,7 @@ Unlike [roblox-group-scanner](https://github.com/h0nde/roblox-group-scanner), th
 
 # Usage
 ```bash
-python scanner.py -w 16 -r 1-1.25m 2.5m-11.5m -c 11m -u WEBHOOKURL
+python scanner.py -w 16 -r 1-1.25m 2.5m-12m -c 11.5m -u WEBHOOKURL
 ```
 
 ```
