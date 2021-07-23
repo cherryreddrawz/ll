@@ -48,7 +48,7 @@ def thread_func(thread_num, worker_num, thread_barrier, thread_event,
             continue
         
         while True:
-            if gid_chunk_size > len(gid_list):
+            if gid_chunk_size > gid_list_len:
                 return
 
             gid_chunk = [
